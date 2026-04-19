@@ -6,22 +6,11 @@
 #include "piezas.h"
 #include "armas.h"
 
-/* ─── Tamaños de tablero por nivel ───────────────────── */
+// tamaños del tablero por nivel. Indice 0 para control.
+static const int tamaños[4] = {0, 12, 8, 6};
 
-static const int TAMAÑOS[4][2] = {
-    {0, 0},   /* índice 0 no usado */
-    {12, 12}, /* Nivel 1: Plaza principal */
-    {8,  8},  /* Nivel 2: Jardín del Rey */
-    {6,  6}   /* Nivel 3: Entrada del castillo */
-};
-
-/* ─── Creación y liberación ───────────────────────────── */
-
-/*
- * Crea e inicializa el juego completo.
- * Reserva memoria, crea tablero nivel 1, inicializa arsenal y spawn.
- * Retorna puntero al Juego, o NULL si falla la memoria.
- */
+// Crea un nuevo juego, inicializa el tablero, el arsenal y hace spawn del nivel 1.
+// Retorna un puntero al juego creado, o NULL si hubo error.
 Juego* juego_crear(void) {
     srand((unsigned int)time(NULL));
 
@@ -32,7 +21,7 @@ Juego* juego_crear(void) {
     j->turno_enemigos = 0;
     j->flash_cooldown = 0;
 
-    j->t = tablero_crear(TAMAÑOS[1][0], TAMAÑOS[1][1]);
+    j->t = tablero_crear(tamaños[1], tamaños[1]);
     if (!j->t) {
         free(j);
         return NULL;
@@ -44,15 +33,11 @@ Juego* juego_crear(void) {
     return j;
 }
 
-/*
- * Libera toda la memoria del juego.
- * Libera piezas del tablero, el tablero y la estructura Juego.
- * Debe llamarse al terminar o perder.
- */
+// Libera toda la memoria del juego. Es llamada al terminar el juego o perder.
 void juego_liberar(Juego *juego) {
     if (!juego) return;
 
-    /* Liberar todas las piezas vivas en el tablero */
+    // Libera todas las piezas del tablero, y luego el tablero.
     if (juego->t) {
         for (int y = 0; y < juego->t->H; y++)
             for (int x = 0; x < juego->t->W; x++) {
@@ -68,12 +53,9 @@ void juego_liberar(Juego *juego) {
     free(juego);
 }
 
-/*
- * Avanza al siguiente nivel.
- * Libera el tablero actual, crea uno nuevo, recarga armas y hace spawn.
- */
+// Avanza al siguiente nivel.
 void juego_avanzar_nivel(Juego *juego) {
-    /* Liberar piezas del tablero actual */
+    // Libera piezas y tablero para crear el nivel nuevo.
     for (int y = 0; y < juego->t->H; y++)
         for (int x = 0; x < juego->t->W; x++) {
             Celda *c = (Celda*)juego->t->celdas[y][x];
@@ -97,19 +79,15 @@ void juego_avanzar_nivel(Juego *juego) {
     printf("Recuperando municion total.\n");
     printf("===================================================\n");
 
-    juego->t = tablero_crear(TAMAÑOS[juego->nivel_actual][0],
-                              TAMAÑOS[juego->nivel_actual][1]);
+    juego->t = tablero_crear(tamaños[juego->nivel_actual], tamaños[juego->nivel_actual]);
     armas_recargar_todo(juego);
     spawn_nivel(juego, juego->nivel_actual);
 }
 
-/* ─── Movimiento del Rey ──────────────────────────────── */
 
-/*
- * Mueve al Rey a (nx, ny) si la posición es válida y está libre.
- * Recarga 1 bala de escopeta al moverse (máx 2).
- * Retorna true si el movimiento fue exitoso.
- */
+// Mueve al Rey si el movimiento es válido.
+// Recarga una munición de la escopeta si no está llena.
+// Retorna true si el movimiento fue exitoso, false si fue inválido.
 bool mover_rey(Juego *juego, int nx, int ny) {
     if (nx < 0 || nx >= juego->t->W || ny < 0 || ny >= juego->t->H) {
         printf("Movimiento fuera del tablero!\n");
@@ -128,21 +106,14 @@ bool mover_rey(Juego *juego, int nx, int ny) {
     rey->x = nx;
     rey->y = ny;
 
-    /* Recargar escopeta al moverse */
-    if (juego->arsenal.municion_actual[0] < juego->arsenal.municion_maxima[0])
+    if (juego->arsenal.municion_actual[0] < juego->arsenal.municion_maxima[0]){
         juego->arsenal.municion_actual[0]++;
-
+    }
     return true;
 }
 
-/* ─── Procesamiento de input ──────────────────────────── */
-
-/*
- * Convierte una tecla de dirección a desplazamiento (dx, dy).
- * Q=arriba-izq, W=arriba, E=arriba-der, A=izq,
- * D=der, Z=abajo-izq, X=abajo, C=abajo-der.
- * Retorna true si la tecla era válida.
- */
+// Convierte la letra input del usuario en una dirección para ser usada por el programa.
+// Retorna true si la letra corresponde a una dirección válida, false si no.
 static bool tecla_a_dir(char tecla, int *dx, int *dy) {
     switch (tecla) {
         case 'Q': case 'q': *dx = -1; *dy =  1; return true;
@@ -157,30 +128,25 @@ static bool tecla_a_dir(char tecla, int *dx, int *dy) {
     }
 }
 
-/*
- * Procesa el input del jugador.
- * Movimiento (QWEADXZC): mueve al Rey.
- * Disparo (1-4): solicita dirección y llama al arma correspondiente.
- * Retorna true si la acción fue válida y consume turno,
- * false si fue inválida (no consume turno).
- */
+
+// Procesa el input del jugador, ya sea movimiento o uso de armas.
+// Retorna true si la acción fue válida y consume turno, false si fue inválida y no consume turno.
 bool juego_procesar_input(Juego *juego, char input) {
     int dx = 0, dy = 0;
 
-    /* Movimiento */
+    // Movimiento 
     if (tecla_a_dir(input, &dx, &dy)) {
         Pieza *rey = juego->jugador;
         return mover_rey(juego, rey->x + dx, rey->y + dy);
     }
 
-    /* Disparo */
+    // Armas
     if (input >= '1' && input <= '4') {
         int arma = input - '1';
 
-        /* Flash (arma 4) no necesita dirección si no hay munición */
+        // Si se selecciona flash, verificar cooldown.
         if (arma == 3 && juego->flash_cooldown > 0) {
-            printf("Flash en recarga! Turnos restantes: %d\n",
-                   juego->flash_cooldown);
+            printf("Flash en recarga! Turnos restantes: %d\n", juego->flash_cooldown);
             return false;
         }
 
@@ -189,81 +155,70 @@ bool juego_procesar_input(Juego *juego, char input) {
         scanf(" %c", &dir);
 
         if (!tecla_a_dir(dir, &dx, &dy)) {
-            printf("Direccion invalida!\n");
+            printf("Direccion inválida!\n");
             return false;
         }
 
         bool disparo = juego->arsenal.disparar[arma](juego, dx, dy);
 
-        /* Flash no consume turno si fue exitoso */
+        // Si se usa flash de forma exitosa no consume turno.
         if (arma == 3 && disparo) return false;
 
         return disparo;
     }
 
-    printf("Accion invalida!\n");
+    printf("Accion invalida!\n"); // En caso que no cumpla ninguna de las acciones anteriores.
     return false;
 }
 
-/* ─── Bucle principal ─────────────────────────────────── */
 
-/*
- * Bucle principal del juego.
- * Alterna entre turno del jugador y turno de enemigos.
- * Termina por victoria (limpiar nivel 3) o derrota (Rey capturado).
- */
+// Bucle principal del juego. Se ejecuta hasta que el jugador gane o pierda.
 void juego_bucle(Juego *juego) {
-    while (1) {
+    while (true) {
         tablero_imprimir(juego);
 
-        /* Mostrar cooldown del Flash si está activo */
-        if (juego->flash_cooldown > 0)
-            printf("[4] Flash en recarga (%d turnos)\n", juego->flash_cooldown);
-        else
-            printf("[4] Flash listo!\n");
-
-        /* Input del jugador */
-        printf("> Ingrese accion: ");
+        // Input del jugador
+        printf("\n> Ingrese accion: ");
         char input;
         scanf(" %c", &input);
 
         bool turno_valido = juego_procesar_input(juego, input);
         if (!turno_valido) continue;
 
-        /* Verificar si el Rey cayó tras su propio movimiento */
+        // Verificar derrota tras acción del jugador
         if (verificar_estado_rey(juego)) {
             tablero_imprimir(juego);
-            printf("\n*** EL REY HA SIDO CAPTURADO. FIN DEL JUEGO ***\n");
+            printf("\n*** El rey ha sido capturado. Has perdido :( ***\n");
             return;
         }
 
-        /* Verificar si el nivel fue completado */
+        // Verificar si el nivel fue completado tras acción del jugador 
         if (contar_enemigos(juego) == 0) {
             if (juego->nivel_actual == 3) {
                 tablero_imprimir(juego);
-                printf("\n*** VICTORIA! EL REY HA RECUPERADO EL CASTILLO ***\n");
+                printf("\n*** Victoria! Has recuperado tu castillo! B) ***\n");
                 return;
             }
             juego_avanzar_nivel(juego);
             continue;
         }
 
-        /* Turno de los enemigos */
-        printf("\nLas piezas avanzan...\n");
+        // Turno de los enemigos
+        printf("\nLos enemigos se acercan...\n");
         mover_enemigos(juego);
 
-        /* Verificar derrota tras movimiento enemigo */
+        // Verificar derrota tras movimiento enemigo
         if (verificar_estado_rey(juego)) {
             tablero_imprimir(juego);
-            printf("\n*** EL REY HA SIDO CAPTURADO. FIN DEL JUEGO ***\n");
+            printf("\n*** El rey ha sido capturado. Has perdido :( ***\n");
             return;
         }
 
-        /* Verificar nivel completado tras turno enemigo (por si acaso) */
+        // Verificar nivel completado tras turno enemigo (por si acaso)
         if (contar_enemigos(juego) == 0) {
             if (juego->nivel_actual == 3) {
                 tablero_imprimir(juego);
-                printf("\n*** VICTORIA! EL REY HA RECUPERADO EL CASTILLO ***\n");
+                printf("\n*** Victoria! Has recuperado tu castillo! B) ***\n");
                 return;
             }
             juego_avanzar_nivel(juego);
@@ -271,14 +226,10 @@ void juego_bucle(Juego *juego) {
     }
 }
 
-/* ─── Main ────────────────────────────────────────────── */
 
-/*
- * Punto de entrada del programa.
- * Crea el juego, ejecuta el bucle principal y libera la memoria.
- */
+// Inicio del programa principal. Crea el juego, ejecuta el bucle principal y libera la memoria al finalizar.
 int main(void) {
-    printf("=== REY DESTRONADO ===\n");
+    printf("Revolución! Tus súbditos se han vuelto contra tí\n");
     printf("Sobrevive la horda y recupera tu castillo!\n\n");
 
     Juego *juego = juego_crear();

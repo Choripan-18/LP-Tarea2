@@ -6,16 +6,9 @@
 #include "piezas.h"
 #include "armas.h"
 
-/*
- * Estructura principal del juego.
- * Contiene todos los componentes necesarios para el ciclo de juego.
- * t: puntero al tablero actual.
- * arsenal: armas y munición del Rey.
- * jugador: puntero a la pieza Rey.
- * nivel_actual: nivel en curso (1, 2 o 3).
- * turno_enemigos: contador de turnos para gestionar piezas lentas (Torre).
- * flash_cooldown: turnos restantes para poder usar Flash de nuevo.
- */
+
+// Estructura principal del juego, contiene el tablero, arsenal,
+// estado del jugador y variables de control de niveles y turnos.
 typedef struct Juego {
     Tablero *t;
     Armas arsenal;
@@ -25,44 +18,26 @@ typedef struct Juego {
     int flash_cooldown;
 } Juego;
 
-/*
- * Inicializa el juego completo: crea el tablero del nivel 1,
- * inicializa el arsenal y hace spawn de las piezas.
- * Retorna puntero al Juego creado, o NULL si falla.
- */
+// Inicializa el juego completo: crea el tablero del nivel 1, inicializa el arsenal y hace spawn de las piezas.
+// Retorna un puntero al Juego creado, o NULL si hubo error.
 Juego* juego_crear(void);
 
-/*
- * Libera toda la memoria del juego: tablero, piezas y estructura.
- * Debe llamarse al terminar o perder.
- */
+
+// Libera toda la memoria del juego. Es llamado al terminar el juego o perder.
 void juego_liberar(Juego *juego);
 
-/*
- * Avanza al siguiente nivel: libera el tablero actual,
- * crea uno nuevo con el tamaño correspondiente y hace spawn.
- * Recarga la munición de todas las armas.
- */
+
+// Avanza al siguiente nivel.
 void juego_avanzar_nivel(Juego *juego);
 
-/*
- * Procesa la entrada del jugador (movimiento o disparo).
- * Retorna true si la acción fue válida y consume el turno,
- * false si fue inválida y no consume el turno.
- */
+// Procesa el input del jugador, ya sea movimiento o uso de arma.
+// Retorna true si la acción fue válida y consume turno, false si fue inválida y no consume turno.
 bool juego_procesar_input(Juego *juego, char input);
 
-/*
- * Mueve al Rey a la posición (nx, ny) si es válida.
- * Recarga 1 bala de escopeta al moverse (máx 2).
- * Retorna true si el movimiento fue exitoso.
- */
+// Intenta mover al rey en la dirección indicada. Retorna true si fue exitoso, false si el movimiento es inválido.
 bool mover_rey(Juego *juego, int nx, int ny);
 
-/*
- * Bucle principal del juego. Alterna turnos entre el jugador
- * y los enemigos hasta victoria o derrota.
- */
+// Bucle principal del juego. Se ejecuta hasta que el jugador gane o pierda.
 void juego_bucle(Juego *juego);
 
 #endif

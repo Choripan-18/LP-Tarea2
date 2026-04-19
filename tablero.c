@@ -4,11 +4,7 @@
 #include "piezas.h"
 #include "main.h"
 
-/*
- * Crea un tablero de ancho x alto.
- * Reserva memoria para la estructura, las filas y las celdas.
- * Retorna puntero al Tablero creado, o NULL si falla la memoria.
- */
+// Crea un tablero dinámico con las dimensiones dadas, reservando memoria para cada celda.
 struct Tablero* tablero_crear(int ancho, int alto) {
     Tablero *t = malloc(sizeof(Tablero));
     if (!t) return NULL;
@@ -16,14 +12,14 @@ struct Tablero* tablero_crear(int ancho, int alto) {
     t->W = ancho;
     t->H = alto;
 
-    /* Reservar array de filas (void**) */
+    // Reservar memoria para las filas
     t->celdas = malloc(sizeof(void**) * alto);
     if (!t->celdas) {
         free(t);
         return NULL;
     }
 
-    /* Reservar cada fila (void*) y sus celdas */
+    // Reservar memoria para cada fila y cada celda
     for (int y = 0; y < alto; y++) {
         t->celdas[y] = malloc(sizeof(void*) * ancho);
         if (!t->celdas[y]) {
@@ -36,11 +32,11 @@ struct Tablero* tablero_crear(int ancho, int alto) {
             return NULL;
         }
 
-        /* Inicializar cada celda vacía */
+        // Inicializar cada celda vacía.
         for (int x = 0; x < ancho; x++) {
             Celda *c = malloc(sizeof(Celda));
             if (!c) {
-                /* Liberar todo lo reservado hasta ahora */
+                // Libera la memoria ya reservada en caso de error.
                 for (int j = 0; j < x; j++) free(t->celdas[y][j]);
                 free(t->celdas[y]);
                 for (int i = 0; i < y; i++) {
@@ -59,15 +55,11 @@ struct Tablero* tablero_crear(int ancho, int alto) {
     return t;
 }
 
-/*
- * Imprime el tablero completo con HUD.
- * Muestra nivel, munición, piezas restantes y el tablero con coordenadas.
- * Recibe el juego para acceder a toda la información necesaria.
- */
+// Imprime el tablero y el HUD completo en consola, mostrando nivel, munición y piezas.
 void tablero_imprimir(struct Juego *juego) {
     Tablero *t = juego->t;
 
-    /* Contar enemigos restantes */
+    // Contar enemigos restantes en el tablero.
     int enemigos = 0;
     for (int y = 0; y < t->H; y++)
         for (int x = 0; x < t->W; x++) {
@@ -75,7 +67,7 @@ void tablero_imprimir(struct Juego *juego) {
             if (c->pieza && c->pieza->tipo != 'R') enemigos++;
         }
 
-    /* Nombres de niveles */
+    // Nombres de niveles para el HUD.
     const char *nombre_nivel[] = {"", "Plaza principal", "Jardín del Rey", "Entrada del castillo"};
 
     printf("\n===================================================\n");
@@ -84,12 +76,12 @@ void tablero_imprimir(struct Juego *juego) {
     printf("Arsenal: [1] Escopeta (%d/%d) | [2] Sniper (%d/%d)\n",
            juego->arsenal.municion_actual[0], juego->arsenal.municion_maxima[0],
            juego->arsenal.municion_actual[1], juego->arsenal.municion_maxima[1]);
-    printf("         [3] Granada  (%d/%d) | [4] Escudo (%d/%d)\n",
+    printf("         [3] Granada  (%d/%d) | [4] Flash (%d/%d)\n",
            juego->arsenal.municion_actual[2], juego->arsenal.municion_maxima[2],
            juego->arsenal.municion_actual[3], juego->arsenal.municion_maxima[3]);
     printf("===================================================\n");
 
-    /* Imprimir filas del tablero (de arriba hacia abajo) */
+    // Imprimir el tablero desde la fila superior (H-1) hasta la inferior (0).
     for (int y = t->H - 1; y >= 0; y--) {
         printf("%2d ", y + 1);
         for (int x = 0; x < t->W; x++) {
@@ -102,23 +94,20 @@ void tablero_imprimir(struct Juego *juego) {
         printf("\n");
     }
 
-    /* Imprimir números de columna */
+    // Imprimir números de columna debajo del tablero.
     printf("   ");
     for (int x = 0; x < t->W; x++) printf("%2d ", x + 1);
     printf("\n");
 
-    /* Instrucciones */
-    printf("\nACCIONES: Disparo: [1] Escopeta [2] Sniper [3] Granada [4] Escudo\n");
+    // Instrucciones de acciones y movimiento.
+    printf("\nACCIONES: Disparo: [1] Escopeta [2] Sniper [3] Granada [4] Flash\n");
     printf("Movimiento:\n");
     printf("  [Q][W][E]\n");
     printf("  [A] R [D]\n");
     printf("  [Z][X][C]\n");
 }
 
-/*
- * Libera toda la memoria del tablero: celdas, filas y estructura.
- * Debe llamarse al cambiar de nivel o al terminar el juego.
- */
+// Libera toda la memoria del heap asociada al tablero.
 void tablero_liberar(struct Tablero *tablero) {
     if (!tablero) return;
 

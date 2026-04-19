@@ -6,15 +6,15 @@ LIBS   = -lm
 
 SRC    = main.c tablero.c piezas.c armas.c
 OBJ    = main.o tablero.o piezas.o armas.o
-TARGET = rey_destronado
+TARGET = revolucion_francesa
 
-# ─── Compilación principal ─────────────────────────────
+# Compilación principal
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
 	$(CC) $(FLAGS) -o $(TARGET) $(OBJ) $(LIBS)
 
-# ─── Compilación separada por módulo ──────────────────
+# Compilación de módulos
 main.o: main.c main.h tablero.h piezas.h armas.h
 	$(CC) $(FLAGS) -c main.c
 
@@ -27,7 +27,7 @@ piezas.o: piezas.c piezas.h main.h
 armas.o: armas.c armas.h piezas.h main.h
 	$(CC) $(FLAGS) -c armas.c
 
-# ─── Utilidades ───────────────────────────────────────
+# Extras
 clean:
 	rm -f $(OBJ) $(TARGET)
 

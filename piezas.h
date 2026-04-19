@@ -5,53 +5,35 @@
 
 struct Juego;
 
-/*
- * Estructura que representa una pieza en el tablero.
- * tipo: 'P'=Peón, 'C'=Caballo, 'A'=Alfil, 'T'=Torre, 'Q'=Reina, 'R'=Rey
- * hp: puntos de vida de la pieza.
- * x, y: posición actual en el tablero.
- */
+// Estructura que representa una pieza en el tablero.
+// Los tipos y sus HP están definidos en el enunciado.
+// Indica la posición actual de la pieza en el tablero.
 typedef struct {
     char tipo;
     int hp;
     int x, y;
 } Pieza;
 
-/*
- * Estructura que representa una celda del tablero.
- * pieza: puntero a la pieza que ocupa la celda, NULL si está vacía.
- */
+// Estructura que representa una celda del tablero.
+// Contiene un puntero a la pieza que ocupa la celda, o NULL si está vacía.
 typedef struct {
     Pieza *pieza;
 } Celda;
 
-/*
- * Inicializa las piezas del nivel indicado en el tablero.
- * Ubica al Rey en la última fila y a los enemigos en las primeras filas.
- */
+// Inicializa las piezas en el tablero según el nivel indicado.
 void spawn_nivel(struct Juego *juego, int nivel);
 
-/*
- * Mueve todos los enemigos vivos un paso hacia el Rey.
- * Cada pieza respeta sus reglas de movimiento de ajedrez.
- */
+// Mueve todas las piezas enemigas hacia el Rey según sus reglas de movimiento.
 void mover_enemigos(struct Juego *juego);
 
-/*
- * Verifica si algún enemigo ocupa la casilla del Rey.
- * Retorna true si el Rey fue capturado (derrota), false si sigue vivo.
- */
+// Verifica si el Rey ha sido capturado por alguna pieza enemiga.
+// Retorna true si el Rey ha sido capturado, false si sigue vivo.
 bool verificar_estado_rey(struct Juego *juego);
 
-/*
- * Elimina una pieza del tablero y libera su memoria.
- * Deja la celda vacía (pieza = NULL).
- */
+// Elimina la pieza en la posición indicada y libera su memoria.
 void eliminar_pieza(struct Juego *juego, int x, int y);
 
-/*
- * Retorna la cantidad de enemigos vivos en el tablero.
- */
+// Retorna el número de enemigos vivos en el tablero.
 int contar_enemigos(struct Juego *juego);
 
 #endif

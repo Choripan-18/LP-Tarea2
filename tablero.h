@@ -3,31 +3,19 @@
 
 struct Juego;
 
-/*
-    Estructura del tablero de juego.
-    W: ancho, H: alto.
-    celdas[y][x] apunta a Celda* mediante triple puntero void***.
- */
+// Estructura del tablero, con dimensiones y celdas dinámicas.
 typedef struct Tablero {
     int W, H;
     void ***celdas;
 } Tablero;
 
-/*
-    Crea un tablero de ancho x alto reservando memoria en el heap.
-    Retorna puntero al Tablero creado, o NULL si falla.
- */
+// Crea un tablero dinámico con las dimensiones dadas, reservando memoria para cada celda.
 struct Tablero* tablero_crear(int ancho, int alto);
 
-/*
-    Imprime el tablero y el HUD completo en consola.
-    Recibe el juego para acceder a nivel, munición y piezas.
- */
+// Imprime el tablero y el HUD completo en consola, mostrando nivel, munición y piezas.
 void tablero_imprimir(struct Juego *juego);
 
-/*
- * Libera toda la memoria heap del tablero (celdas, filas, estructura).
- */
+// Libera toda la memoria del heap asociada al tablero.
 void tablero_liberar(struct Tablero *tablero);
 
 #endif
