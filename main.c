@@ -47,6 +47,15 @@ void juego_liberar(Juego *juego) {
                     c->pieza = NULL;
                 }
             }
+        if (juego->jugador) {
+            int rx = juego->jugador->x;
+            int ry = juego->jugador->y;
+            Celda *celda_rey = (Celda*)juego->t->celdas[ry][rx];
+            if (celda_rey->pieza != juego->jugador) {
+                free(juego->jugador);
+                juego->jugador = NULL;
+            }
+        }
         tablero_liberar(juego->t);
     }
 

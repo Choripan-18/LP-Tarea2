@@ -57,7 +57,8 @@ bool escopeta(Juego *j, int dir_x, int dir_y) {
     // Daño a las 3 casillas detrás del objetivo.
     aplicar_daño(j, x1 + dir_x - dir_y, y1 + dir_y - dir_x, 1);     
     aplicar_daño(j, x1 + dir_x, y1 + dir_y, 1);                     
-    aplicar_daño(j, x1 + dir_x + dir_y, y1 + dir_y + dir_x, 1);     
+    aplicar_daño(j, x1 + dir_x + dir_y, y1 + dir_y + dir_x, 1); 
+    return true;    
 }
 
 

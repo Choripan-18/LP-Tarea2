@@ -26,7 +26,6 @@ static void colocar_pieza(Juego *juego, Pieza *p, int x, int y) {
 // Busca una posición aleatoria libre en la fila indicada, evitando esquinas si se indica.
 static int pos_aleatoria_fila(Juego *juego, int fila, bool evitar_esquinas) {
     int W = juego->t->W;
-    int intentos = 0;
     int x;
     do {
         x = evitar_esquinas ? 1 + rand() % (W - 2) : rand() % W;
