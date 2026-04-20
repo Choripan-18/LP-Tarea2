@@ -39,14 +39,6 @@ void juego_liberar(Juego *juego) {
 
     // Libera todas las piezas del tablero, y luego el tablero.
     if (juego->t) {
-        for (int y = 0; y < juego->t->H; y++)
-            for (int x = 0; x < juego->t->W; x++) {
-                Celda *c = (Celda*)juego->t->celdas[y][x];
-                if (c->pieza) {
-                    free(c->pieza);
-                    c->pieza = NULL;
-                }
-            }
         if (juego->jugador) {
             int rx = juego->jugador->x;
             int ry = juego->jugador->y;
@@ -56,9 +48,18 @@ void juego_liberar(Juego *juego) {
                 juego->jugador = NULL;
             }
         }
+        for (int y = 0; y < juego->t->H; y++){
+            for (int x = 0; x < juego->t->W; x++) {
+                Celda *c = (Celda*)juego->t->celdas[y][x];
+                if (c->pieza) {
+                    free(c->pieza);
+                    c->pieza = NULL;
+                }
+            }
+        }
         tablero_liberar(juego->t);
+    
     }
-
     free(juego);
 }
 

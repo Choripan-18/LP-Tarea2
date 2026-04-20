@@ -103,8 +103,20 @@ int contar_enemigos(Juego *juego) {
 // Retorna true si el Rey ha sido capturado.
 bool verificar_estado_rey(Juego *juego) {
     Pieza *rey = juego->jugador;
-    Celda *c = get_celda(juego, rey->x, rey->y);
-    return (c->pieza != NULL && c->pieza->tipo != 'R');
+    // Primera verificación.
+    Celda *c = (Celda*)juego->t->celdas[rey->y][rey->x];
+    if (c->pieza && c->pieza != rey) return true;
+    // Segunda verificación.
+    for (int y = 0; y < juego->t->H; y++)
+        for (int x = 0; x < juego->t->W; x++) {
+            Celda *celda = (Celda*)juego->t->celdas[y][x];
+            if (celda->pieza && celda->pieza != rey &&
+                celda->pieza->x == rey->x && celda->pieza->y == rey->y)
+                return true;
+        }
+
+    return false;
+
 }
 
 // Calculadora de signo.
@@ -138,12 +150,16 @@ static void mover_peon(Juego *juego, Pieza *p) {
     int dy = signo(rey->y - p->y);
 
     // Intenta atacar
-    if (dx != 0 && dy != 0)
-        if (intentar_mover(juego, p, p->x + dx, p->y + dy)) return;
-
+    if (dx != 0 && dy != 0 && abs(rey->x - p->x) == 1 && abs(rey->y - p->y) == 1) {
+        intentar_mover(juego, p, p->x + dx, p->y + dy); 
+        return;
+    }
     // Movimiento ortogonal hacia el Rey
-    if (dy != 0) intentar_mover(juego, p, p->x, p->y + dy);
-    else         intentar_mover(juego, p, p->x + dx, p->y);
+    if (abs(rey->y - p->y) >= abs(rey->x - p->x)){
+        intentar_mover(juego, p, p->x, p->y + dy);}
+    else{
+        intentar_mover(juego, p, p->x + dx, p->y);}
+
 }
 
 // Mueve el caballo a la casilla de salto que lo acerque más al Rey, evitando otras piezas.
